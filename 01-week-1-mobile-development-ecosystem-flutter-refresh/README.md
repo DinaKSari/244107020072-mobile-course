@@ -1,17 +1,16 @@
 # my_first_app
 
-A new Flutter project.
+Penjelasan r dan R:
+hot reload tekan r untuk mereload aplikasi nya, sedangkan hot restart tekan R untuk merestart aplikasi nya.
 
-## Getting Started
+Buktinya:
+saat hot reload di terminal ditampilkan text "Reloaded 1 of 754 libraries in 454ms (compile: 20 ms, reload: 211 ms, reassemble: 69 ms)". sedangkan hot restart di terminal ditampilkan text "Restarted application in 578ms."
 
-This project is a starting point for a Flutter application.
+Kendala yang dihadapi:
+saat melakukan flutter doctor, sdk android studio saya tidak ke detect karena berbeda path dengan konfigurasi flutter doctor nya. 
 
-A few resources to get you started if this is your first Flutter project:
+solusi:
+saya ganti dulu path yang ada di flutter doctor agar sesuai dengan path sdk saya. saya menggunakan 'flutter config --android-sdk "PATH"' dan akhirnya bisa ke detect. namun license nya status unknown, sudah jalanin 'flutter doctor --android-licenses' masih tetap unknown. Tapi ada warning 'Warning: The --licenses option is no longer needed.', jadi saya biarkan saja.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+hasil:
+cek 'flutter devices', device nya muncul di dalam list nya.
