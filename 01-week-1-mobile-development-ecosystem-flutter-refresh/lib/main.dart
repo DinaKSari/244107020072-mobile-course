@@ -20,7 +20,9 @@ class MyApp extends StatelessWidget {
             SizedBox(height: 16),
             Text('Nama: Dina Kumala Sari', style: TextStyle(fontSize: 24)),
             Text('NIM 244107020072', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 16),
             Text('Pemrograman Mobile - Minggu 1'),
+            Text('Membuat Aplikasi Flutter Sederhana')
           ])
         )
       ),
