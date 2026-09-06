@@ -62,7 +62,7 @@ class DashboardPage extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 1000 ? 2 : 1;
+          final columns = constraints.maxWidth >= 700 ? 2 : 1;
           return GridView.count(
             padding: const EdgeInsets.all(16),
             crossAxisCount: columns,
@@ -70,6 +70,7 @@ class DashboardPage extends StatelessWidget {
             mainAxisSpacing: 16,
             childAspectRatio: 2.6,
             children: const [
+              ProfileCard(),
               DashboardCard(title: 'Assignments', value: '8'),
               DashboardCard(title: 'Attendance', value: '92%'),
               DashboardCard(title: 'Portfolio', value: 'Ready'),
@@ -96,6 +97,51 @@ class DashboardCard extends StatelessWidget {
           Expanded(child: Text(title)),
           Text(value, style: Theme.of(context).textTheme.headlineSmall),
         ]),
+      ),
+    );
+  }
+}
+
+class ProfileCard extends StatelessWidget {
+  const ProfileCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.person)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Nama Mahasiswa',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Dina Kumala Sari'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(children: [
+            Expanded(child: Text('NIM')),
+            Text('244107020072'),
+          ]),
+          const Row(children: [
+            Expanded(child: Text('Kelas')),
+            Text('TI-3G'),
+          ]),
+        ],
       ),
     );
   }
