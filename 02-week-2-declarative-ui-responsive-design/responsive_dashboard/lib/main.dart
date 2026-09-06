@@ -69,12 +69,23 @@ class DashboardPage extends StatelessWidget {
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             childAspectRatio: 2.6,
-            children: const [
-              ProfileCard(),
-              DashboardCard(title: 'Assignments', value: '8'),
-              DashboardCard(title: 'Attendance', value: '92%'),
-              DashboardCard(title: 'Portfolio', value: 'Ready'),
-              DashboardCard(title: 'Current week', value: '02'),
+            children: [
+              Semantics(
+                label: 'Profile card with student information',
+                child: ProfileCard(),
+              ),
+              Semantics(
+                label: 'Assignments card',
+                child: DashboardCard(title: 'Assignments', value: '8'),),
+              Semantics(
+                label: 'Attendance card', 
+                child: DashboardCard(title: 'Attendance', value: '92%'),),
+              Semantics(
+                label: 'Portfolio card', 
+                child: DashboardCard(title: 'Portfolio', value: 'Ready'),),
+              Semantics(
+                label: 'Current week card', 
+                child: DashboardCard(title: 'Current week', value: '02'),),
             ],
           );
         },
