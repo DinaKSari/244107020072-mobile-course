@@ -13,18 +13,53 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(title: const Text('Profil Mahasiswa')),
-        body: const Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children:[
-            Icon(Icons.school, size: 72),
-            SizedBox(height: 16),
-            Text('Nama: Dina Kumala Sari', style: TextStyle(fontSize: 24)),
-            Text('NIM 244107020072', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 16),
-            Text('Pemrograman Mobile - Minggu 1'),
-            Text('Membuat Aplikasi Flutter Sederhana')
-          ])
-        )
+        body: Center(child: ProfileCard())
+      ),
+    );
+  }
+}
+
+class ProfileCard extends StatelessWidget {
+  const ProfileCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(child: Icon(Icons.person)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Nama Mahasiswa',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Dina Kumala Sari'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(children: [
+            Expanded(child: Text('NIM')),
+            Text('244107020072'),
+          ]),
+          const Row(children: [
+            Expanded(child: Text('Kelas')),
+            Text('TI-3G'),
+          ]),
+        ],
       ),
     );
   }
