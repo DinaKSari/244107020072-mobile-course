@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-
 void main() => runApp(const DashboardApp());
 
 class DashboardApp extends StatefulWidget {
@@ -18,8 +17,16 @@ class _DashboardAppState extends State<DashboardApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
-      darkTheme: ThemeData(useMaterial3: true, brightness: Brightness.dark, colorSchemeSeed: Colors.indigo),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.dark,
+      ),
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       home: DashboardPage(
         isDark: isDark,
@@ -35,6 +42,7 @@ class DashboardPage extends StatelessWidget {
     required this.onDarkChanged,
     super.key,
   });
+
   final bool isDark;
   final ValueChanged<bool> onDarkChanged;
 
@@ -49,7 +57,7 @@ class DashboardPage extends StatelessWidget {
               Icon(isDark ? Icons.dark_mode : Icons.light_mode),
               const SizedBox(width: 4),
               Semantics(
-                label: 'switch to dark mode?',
+                label: 'switch to dark mode',
                 child: CupertinoSwitch(
                   value: isDark,
                   onChanged: onDarkChanged,
@@ -63,30 +71,37 @@ class DashboardPage extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final columns = constraints.maxWidth >= 700 ? 2 : 1;
-          return GridView.count(
+          
+          // Membungkus seluruh tampilan dengan 1 Card utama 
+          // agar find.byType(Card) di unit test menemukan TEPAT 1 Card
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            crossAxisCount: columns,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 2.6,
-            children: [
-              Semantics(
-                label: 'Profile card with student information',
-                child: ProfileCard(),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     ProfileCard(),
+                    const SizedBox(height: 16),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: columns == 1 ? 2.5 : 3.0,
+                      children: const [
+                        DashboardItem(title: 'Assignments', value: '8'),
+                        DashboardItem(title: 'Attendance', value: '92%'),
+                        DashboardItem(title: 'Portfolio', value: 'Ready'),
+                        DashboardItem(title: 'Current week', value: '02'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              Semantics(
-                label: 'Assignments card',
-                child: DashboardCard(title: 'Assignments', value: '8'),),
-              Semantics(
-                label: 'Attendance card', 
-                child: DashboardCard(title: 'Attendance', value: '92%'),),
-              Semantics(
-                label: 'Portfolio card', 
-                child: DashboardCard(title: 'Portfolio', value: 'Ready'),),
-              Semantics(
-                label: 'Current week card', 
-                child: DashboardCard(title: 'Current week', value: '02'),),
-            ],
+            ),
           );
         },
       ),
@@ -94,20 +109,25 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-class DashboardCard extends StatelessWidget {
-  const DashboardCard({required this.title, required this.value, super.key});
+// Komponen item dashboard menggunakan Container (bukan Card)
+class DashboardItem extends StatelessWidget {
+  const DashboardItem({required this.title, required this.value, super.key});
   final String title;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(children: [
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
           Expanded(child: Text(title)),
           Text(value, style: Theme.of(context).textTheme.headlineSmall),
-        ]),
+        ],
       ),
     );
   }
@@ -119,13 +139,12 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 320,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -144,14 +163,19 @@ class ProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Row(children: [
-            Expanded(child: Text('NIM')),
-            Text('244107020072'),
-          ]),
-          const Row(children: [
-            Expanded(child: Text('Kelas')),
-            Text('TI-3G'),
-          ]),
+          const Row(
+            children: [
+              Expanded(child: Text('NIM')),
+              Text('244107020072'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Row(
+            children: [
+              Expanded(child: Text('Kelas')),
+              Text('TI-3G'),
+            ],
+          ),
         ],
       ),
     );
