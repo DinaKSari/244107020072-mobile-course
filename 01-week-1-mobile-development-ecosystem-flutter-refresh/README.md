@@ -14,3 +14,12 @@ saya ganti dulu path yang ada di flutter doctor agar sesuai dengan path sdk saya
 
 hasil:
 cek 'flutter devices', device nya muncul di dalam list nya.
+
+flutter-version untuk cek versi
+![kode flutter --version](screenshots/flutter-version.png)
+
+hasil dari flutter doctor dan licence
+![flutter doctor dan license](<screenshots/flutter-doctor dan license.png>)
+
+hasil tugas membuat profil mahasiswa
+![hasil tugas profil mahasiswa](screenshots/hasil-profil-mahasiswa.png)
