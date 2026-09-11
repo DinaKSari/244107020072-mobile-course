@@ -1,4 +1,21 @@
 # Refleksi
+Kapan setState masih cukup, dan kapan state harus naik ke Riverpod? <br>
+Jawab: <br>
+setState: Cukup digunakan untuk state lokal yang hanya memengaruhi satu widget. <br>
+Riverpod: Dibutuhkan ketika state harus diakses atau dibagikan ke banyak widget di halaman berbeda, atau ketika state harus bertahan meskipun navigasi berpindah halaman. <br>
+Apa perbedaan context.go dan context.push, dan kapan masing-masing tepat digunakan? <br>
+jawab: <br>
+context.go: Melakukan navigasi absolut dengan mengganti history tumpukan rute saat ini.<br>
+context.push: Menambahkan rute baru ke atas tumpukan tanpa menghapus rute sebelumnya, sehingga tombol back otomatis muncul. <br>
+
+Bagaimana AsyncValue mencegah bug dibanding tiga boolean terpisah?<br>
+Jawab: <br>
+AsyncValue menggabungkan status loading, error, dan data ke dalam satu objek tertutup (sealed class). Ini mencegah bug logika di mana pengembang lupa mengubah salah satu status (misalnya, isLoading bernilai false tapi error terisi data basi), sehingga UI dijamin sinkron dengan kondisi asinkron yang sedang terjadi. <br>
+
+Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?<br>
+jawab: <br>
+Sudah oke. <br>
+
 ## Praktikum 3
 1. mengapa menampilkan ulang data lama (stale data) dengan indikator refresh kadang lebih baik daripada mengosongkan layar? Kapan pola itu penting? <br>
 jawab: <br>
@@ -25,3 +42,26 @@ Menggunakan struktur ConsumerWidget bersih tanpa menyisipkan widget Consumer ber
 Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning? <br>
 jawab: <br>
 Iya, flutter analyze dan flutter test nya lulus tanpa warning. <br>
+
+# Hasil IMAGE
+### Praktikum 1
+![Home page](Screenshots/home_page_praktikum1.png) <br>
+![Detail/Item page](Screenshots/detail_page_praktikum1.png) <br>
+
+### Praktikum 2
+![Aplikasi Todo](Screenshots/todo_page_praktikum2.png) <br>
+![List 1](Screenshots/todo_page_listbaru.png) <br>
+
+### Praktikum 3
+![Product Page](<Screenshots/product_page_praktikum 3.png>) <br>
+![Percobaan Error](<Screenshots/product_page_error exception_praktikum3.png>) <br>
+![loading screen](<Screenshots/product_page_loading screen_praktikum3.png>) <br>
+
+### AI CHALLENGE
+![aplikasi stats hasil AI](Screenshots/AI_challenge_stats_page.png) <br>
+![Hasil test dan analyze](<Screenshots/AI_challenge_flutter test_flutter analyze.png>) <br>
+
+### Tugas Refactoring
+![Home page](Screenshots/tugas_refactoring_home.png) <br>
+![stats page](Screenshots/tugas_refactoring_stats.png) <br>
+![Hasil test dan analyze](Screenshots/tugas_refactoring_test_analyze.png) <br>
