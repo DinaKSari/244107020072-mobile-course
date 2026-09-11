@@ -19,6 +19,8 @@ Sudah oke. <br>
 ## Praktikum 3
 1. mengapa menampilkan ulang data lama (stale data) dengan indikator refresh kadang lebih baik daripada mengosongkan layar? Kapan pola itu penting? <br>
 jawab: <br>
+Agar aplikasinya nggak keliatan nge-bug saat lagi loading data baru. Jika layar tiba-tiba putih atau kosong, user bakal mikir aplikasinya error. Jadi, data lama tetep dipajang biar user masih bisa lihat, sambil nunggu data barunya selesai ditarik dari server. <br>
+Pola itu penting pas aplikasi lagi ambil data dari internet yang butuh waktu, jadi user nggak capek menunggu layar kosong. <br>
 
 # AI CHALLENGE
 Apakah state diubah secara immutable (tidak ada state.add() atau mutasi list langsung)? <br>
