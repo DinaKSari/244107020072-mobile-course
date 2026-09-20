@@ -17,3 +17,7 @@ jawab: <br>
 Semua verifikasi sudah sukses dilakukan, hasil test juga lulus
 ![hasil test](Screenshots/ai_challenge_test.png) <br><br>
 ![hasil akhir](Screenshots/hasil_ai-challenge.png) <br><br>
+
+# Hasil Refactoring
+![hasil akhir](Screenshots/hasil_week4_refactoring.png) <br><br>
+![hasil test dan analyze](Screenshots/week4_api-refactoring-test.png)<br><br>
