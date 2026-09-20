@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'api_client.dart';
 import 'models/post.dart';
+import 'paged_posts.dart';
 import 'repositories/post_repository.dart';
 
 final dioProvider = Provider<Dio>((ref) => createDio());
@@ -74,7 +75,7 @@ Future<Object?> readPostsErrorOnce(ProviderContainer container) {
   return completer.future.whenComplete(sub.close);
 }
 
-String friendlyErrorMessage(Object error) {
+/* String friendlyErrorMessage(Object error) {
   if (error is DioException) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -95,4 +96,24 @@ String friendlyErrorMessage(Object error) {
     }
   }
   return 'Terjadi kesalahan tak terduga: $error';
-}
+} */
+// tugas refactoring
+final postDetailProvider = FutureProvider.family<Post, int>((ref, id) async {
+  // Ganti .valueOrNull menjadi .value
+  final listState = ref.read(postListProvider).value;
+  if (listState != null) {
+    try {
+      return listState.firstWhere((p) => p.id == id);
+    } catch (_) {}
+  }
+
+  // Coba ambil dari cache pagedPostsProvider
+  final pagedState = ref.read(pagedPostsProvider);
+  try {
+    return pagedState.items.firstWhere((p) => p.id == id);
+  } catch (_) {} 
+
+  // Fallback ke repository jika tidak ada di cache
+  final repository = ref.read(postRepositoryProvider);
+  return repository.fetchPost(id);
+});

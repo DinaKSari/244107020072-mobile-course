@@ -28,4 +28,11 @@ class PostRepository {
         .map(Post.fromJson)
         .toList();
   }
+
+  // untuk tugas refactoring
+  Future<Post> fetchPost(int id) async {
+    final response = await _dio.get<Map<String, dynamic>>('/posts/$id');
+    if (response.data == null) throw Exception('Data kosong');
+    return Post.fromJson(response.data!);
+  }
 }
