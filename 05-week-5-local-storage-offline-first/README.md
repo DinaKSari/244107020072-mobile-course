@@ -25,3 +25,11 @@ jawab: Aku lebih memilih SharedPreferences karna lebih mudah, ringan, cepat. Ras
 # grafik perbandingan solusi
 ![grafik](<../Screenshots/grafik perbandingan solusi_aichall.png>)<br><br>
 ![rekomendasi ai](<../Screenshots/rekomendasi_final_ai chall.png>) <br><br>
+
+# Hasil tugas refactoring
+mode offline sebelum async<br>
+![mode offline](<Screenshots/rf_mode off.png>)<br><br>
+mode online setelah async <br>
+![mode online](<Screenshots/rf_mode on.png>)<br><br>
+hasil test dan analyze<br>
+![hasil](Screenshots/hasilTest_refactoring.png)<br>

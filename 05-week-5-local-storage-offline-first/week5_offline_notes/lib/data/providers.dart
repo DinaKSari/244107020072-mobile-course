@@ -1,15 +1,27 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'dart:async';
+import 'package:riverpod/legacy.dart';
 import 'api_client.dart';
 import 'models/post.dart';
 import 'repositories/post_repository.dart';
+import 'local/note.dart';
+import 'repositories/note_repository.dart';
+import 'sync.dart' as sync;
 
 final dioProvider = Provider<Dio>((ref) => createDio());
 
 final postRepositoryProvider = Provider<PostRepository>(
   (ref) => PostRepository(ref.watch(dioProvider)),
+);
+
+final noteRepositoryProvider = Provider<NoteRepository>((ref) => NoteRepository());
+
+// Daftar catatan sebagai provider (bukan state lokal halaman) agar
+// mudah di-override untuk testing lewat noteRepositoryProvider.
+final notesProvider = FutureProvider<List<Note>>(
+  (ref) => ref.watch(noteRepositoryProvider).fetchNotes(),
+  retry: (retryCount, error) => null,
 );
 
 // Toggle simulasi offline yang deterministik (bagian 3).
@@ -24,12 +36,13 @@ class PostListNotifier extends AsyncNotifier<List<Post>> {
 
     if (forceOffline) {
       // Mode pesawat/paksa offline: hanya baca cache, tidak refresh.
-      return repository.readCachedPosts();
+      return sync.readCachedPosts();
     }
 
     // Cache-first: tampilkan cache seketika, refresh di background,
     // lalu invalidate diri sendiri saat data baru sudah tersimpan.
-    return repository.loadPostsCacheFirst(
+    return sync.loadPostsCacheFirst(
+      repository,
       onRefreshed: (_) => ref.invalidateSelf(),
     );
   }
@@ -39,11 +52,11 @@ class PostListNotifier extends AsyncNotifier<List<Post>> {
     try {
       final repository = ref.read(postRepositoryProvider);
       if (ref.read(forceOfflineProvider)) {
-        state = AsyncData(await repository.readCachedPosts());
+        state = AsyncData(await sync.readCachedPosts());
         return;
       }
       final fresh = await repository.fetchPosts();
-      await repository.writeCachedPosts(fresh);
+      await sync.writeCachedPosts(fresh);
       state = AsyncData(fresh);
     } catch (e, st) {
       state = AsyncError(e, st);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../data/local/note.dart';
-import '../data/repositories/note_repository.dart';
+import '../data/sync.dart' as sync;
 import '../data/providers.dart';
-
-final noteRepositoryProvider = Provider((ref) => NoteRepository());
+import '../widgets/note_tile.dart';
 
 class OfflineNotesPage extends ConsumerStatefulWidget {
   const OfflineNotesPage({super.key});
@@ -24,14 +24,10 @@ class _OfflineNotesPageState extends ConsumerState<OfflineNotesPage> {
     _loadData();
   }
 
-  // Mengambil data catatan dan jumlah antrean sync dari SQLite
-  // (selalu lokal, jadi akurat walau tidak ada koneksi sama sekali)
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final repository = ref.read(noteRepositoryProvider);
-    final notes = await repository.fetchNotes();
-    final dirtyCount = await repository.countDirty();
-
+    final notes = await ref.refresh(notesProvider.future);
+    final dirtyCount = await ref.read(noteRepositoryProvider).countDirty();
     setState(() {
       _notes = notes;
       _dirtyCount = dirtyCount;
@@ -54,7 +50,7 @@ class _OfflineNotesPageState extends ConsumerState<OfflineNotesPage> {
       );
       return;
     }
-    final synced = await ref.read(noteRepositoryProvider).syncNotes();
+    final synced = await sync.syncNotes(ref.read(noteRepositoryProvider));
     _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,21 +67,16 @@ class _OfflineNotesPageState extends ConsumerState<OfflineNotesPage> {
       appBar: AppBar(
         title: const Text('Catatan Offline'),
         actions: [
-          // Toggle simulasi offline deterministik (bagian 3)
           IconButton(
             icon: Icon(forceOffline ? Icons.wifi_off : Icons.wifi),
             tooltip: forceOffline ? 'Mode: Offline (paksa)' : 'Mode: Online',
             onPressed: () =>
                 ref.read(forceOfflineProvider.notifier).state = !forceOffline,
           ),
-          // Indikator Badge untuk catatan yang 'dirty'
           Stack(
             alignment: Alignment.center,
             children: [
-              IconButton(
-                icon: const Icon(Icons.sync),
-                onPressed: _syncData,
-              ),
+              IconButton(icon: const Icon(Icons.sync), onPressed: _syncData),
               if (_dirtyCount > 0)
                 Positioned(
                   right: 8,
@@ -119,12 +110,11 @@ class _OfflineNotesPageState extends ConsumerState<OfflineNotesPage> {
                   itemCount: _notes.length,
                   itemBuilder: (context, index) {
                     final note = _notes[index];
-                    return ListTile(
-                      title: Text(note.title),
-                      subtitle: Text(note.body),
-                      trailing: note.dirty
-                          ? const Icon(Icons.cloud_off, color: Colors.orange)
-                          : const Icon(Icons.cloud_done, color: Colors.green),
+                    return NoteTile(
+                      note: note,
+                      onTap: note.id == null
+                          ? null
+                          : () => context.push('/note/${note.id}'),
                       onLongPress: () async {
                         if (note.id != null) {
                           await ref

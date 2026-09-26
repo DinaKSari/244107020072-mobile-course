@@ -14,6 +14,15 @@ class NoteRepository {
     return rows.map(Note.fromMap).toList();
   }
 
+  // Dipakai halaman detail (/note/:id): baca langsung dari repository lokal.
+  Future<Note?> fetchNoteById(int id) async {
+    final db = await _openDb();
+    final rows =
+        await db.query('notes', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return null;
+    return Note.fromMap(rows.first);
+  }
+
   Future<Note> addNote({required String title, String body = ''}) async {
     final db = await _openDb();
     final note = Note(
@@ -47,16 +56,5 @@ class NoteRepository {
   Future<void> markAllSynced() async {
     final db = await _openDb();
     await db.update('notes', {'dirty': 0}, where: 'dirty = 1');
-  }
-
-  /// Simulasi upload catatan dirty ke server. Pada project nyata,
-  /// kirim tiap catatan dirty ke REST API di sini, lalu tandai bersih
-  /// bila server menjawab 2xx.
-  Future<int> syncNotes() async {
-    final dirtyCount = await countDirty();
-    if (dirtyCount == 0) return 0;
-    await Future.delayed(const Duration(seconds: 1));
-    await markAllSynced();
-    return dirtyCount;
   }
 }
