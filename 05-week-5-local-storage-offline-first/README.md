@@ -21,10 +21,10 @@ Keputusan final Anda beserta alasannya, boleh berbeda dari rekomendasi AI selama
 jawab: saya lebih memilih SharedPreferences karna lebih mudah, ringan, cepat. Rasanya lebih efisien karna semua key value nya ada di satu file.
 
 # table perbandingan
-![tabel](<../Screenshots/tabel perbandingan_ai chall.png>)<br><br>
+![tabel](<Screenshots/tabel perbandingan_ai chall.png>)<br><br>
 # grafik perbandingan solusi
-![grafik](<../Screenshots/grafik perbandingan solusi_aichall.png>)<br><br>
-![rekomendasi ai](<../Screenshots/rekomendasi_final_ai chall.png>) <br><br>
+![grafik](<Screenshots/grafik perbandingan solusi_aichall.png>)<br><br>
+![rekomendasi ai](<Screenshots/rekomendasi_final_ai chall.png>) <br><br>
 
 # Hasil tugas refactoring
 mode offline sebelum async<br>
