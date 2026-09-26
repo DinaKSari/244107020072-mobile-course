@@ -1,12 +1,3 @@
-# Praktikum 1 Praktikum 2 dan Praktikum 3
-Hasil dari ketiga praktikum, sebelum wifi dihidupkan: <br><br>
-![sebelum](Screenshots/prak3_sebelum.png)<br><br>
-Hasil dari ketiga praktikum sesudah wifi dihidupkan <br><br>
-![sesudah](Screenshots/prak3_sesudah.png)<br><br>
-
-## Observasi
-saat wifi dimatikan, notes berada dalam mode offline. pengguna dapat melihat note sebelumnya karena tersimpan di dalam cache. lalu saat buat note baru akan masuk ke dalam dirty cache. setelah async, maka note akan masuk ke dalam data cache yang baru jg.
-
 # ai_challenge
 
 Apakah AI menempatkan daftar catatan di SharedPreferences? (menolak: rapuh untuk koleksi).
