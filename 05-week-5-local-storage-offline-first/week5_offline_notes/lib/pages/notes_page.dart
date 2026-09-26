@@ -21,6 +21,7 @@ class _OfflineNotesPageState extends ConsumerState<OfflineNotesPage> {
   @override
   void initState() {
     super.initState();
+    ref.read(prefsRepositoryProvider).markOpenedNow();
     _loadData();
   }
 

@@ -6,6 +6,7 @@ import 'api_client.dart';
 import 'models/post.dart';
 import 'repositories/post_repository.dart';
 import 'local/note.dart';
+import 'prefs.dart';
 import 'repositories/note_repository.dart';
 import 'sync.dart' as sync;
 
@@ -16,6 +17,31 @@ final postRepositoryProvider = Provider<PostRepository>(
 );
 
 final noteRepositoryProvider = Provider<NoteRepository>((ref) => NoteRepository());
+
+final prefsRepositoryProvider = Provider((ref) => PrefsRepository());
+
+// Preferensi dark mode, persisten via SharedPreferences.
+final darkModeProvider =
+    AsyncNotifierProvider<DarkModeNotifier, bool>(DarkModeNotifier.new);
+
+class DarkModeNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.watch(prefsRepositoryProvider).getDarkMode();
+
+  Future<void> toggle() async {
+    final next = !(state.value ?? false);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(prefsRepositoryProvider).setDarkMode(next);
+      return next;
+    });
+  }
+}
+
+// Waktu terakhir aplikasi dibuka, persisten via SharedPreferences.
+final lastOpenedProvider = FutureProvider<String?>(
+  (ref) => ref.watch(prefsRepositoryProvider).getLastOpened(),
+);
 
 // Daftar catatan sebagai provider (bukan state lokal halaman) agar
 // mudah di-override untuk testing lewat noteRepositoryProvider.

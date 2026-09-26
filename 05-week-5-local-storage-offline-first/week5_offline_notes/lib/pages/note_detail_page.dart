@@ -33,10 +33,56 @@ class _NoteDetailPageState extends ConsumerState<NoteDetailPage> {
     });
   }
 
+  Future<void> _editNote() async {
+    final titleCtrl = TextEditingController(text: _note!.title);
+    final bodyCtrl = TextEditingController(text: _note!.body);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Catatan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+                controller: titleCtrl,
+                decoration: const InputDecoration(labelText: 'Judul')),
+            TextField(
+                controller: bodyCtrl,
+                decoration: const InputDecoration(labelText: 'Isi')),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Simpan')),
+        ],
+      ),
+    );
+    if (saved == true) {
+      await ref.read(noteRepositoryProvider).updateNote(Note(
+            id: _note!.id,
+            title: titleCtrl.text,
+            body: bodyCtrl.text,
+            updatedAt: _note!.updatedAt,
+          ));
+      ref.invalidate(notesProvider); // agar daftar & badge dirty ikut update
+      _load();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Catatan')),
+      appBar: AppBar(
+        title: const Text('Detail Catatan'),
+        actions: [
+          if (_note != null)
+            IconButton(icon: const Icon(Icons.edit), onPressed: _editNote),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _note == null

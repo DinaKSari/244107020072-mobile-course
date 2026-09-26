@@ -41,6 +41,20 @@ class NoteRepository {
     );
   }
 
+  // Update: melengkapi CRUD. Edit otomatis menandai dirty agar ikut sync.
+  Future<void> updateNote(Note note) async {
+    final db = await _openDb();
+    final updated = Note(
+      id: note.id,
+      title: note.title,
+      body: note.body,
+      updatedAt: DateTime.now(),
+      dirty: true,
+    );
+    await db.update('notes', updated.toMap(),
+        where: 'id = ?', whereArgs: [note.id]);
+  }
+
   Future<void> deleteNote(int id) async {
     final db = await _openDb();
     await db.delete('notes', where: 'id = ?', whereArgs: [id]);
