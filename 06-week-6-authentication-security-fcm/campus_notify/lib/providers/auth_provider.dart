@@ -1,43 +1,41 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/api_client.dart';
 import '../data/auth_repository.dart';
 import '../data/token_store.dart';
 
-// 1. Deklarasikan TokenStore Provider
-final tokenStoreProvider = Provider<TokenStore>((ref) {
-  return TokenStore();
-});
+final tokenStoreProvider = Provider((_) => TokenStore());
+final authRepositoryProvider = Provider((_) => AuthRepository());
 
-// 2. Deklarasikan AuthRepository Provider
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository();
-});
+final dioProvider = Provider<Dio>((ref) => buildApiClient(
+      ref.read(tokenStoreProvider),
+      ref.read(authRepositoryProvider),
+      () => ref.read(authStateProvider.notifier).expire(),
+    ));
 
-// 3. Provider AuthState milikmu
 final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
 
 class AuthNotifier extends AsyncNotifier<bool> {
   @override
-  Future<bool> build() async {
-    // Sekarang tokenStoreProvider sudah dikenali!
-    final token = await ref.watch(tokenStoreProvider).readAccess();
-    return token != null;
-  }
+  Future<bool> build() async =>
+      await ref.read(tokenStoreProvider).readAccess() != null;
 
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final session = await ref
+      final s = await ref
           .read(authRepositoryProvider)
           .login(email: email, password: password);
-      await ref
-          .read(tokenStoreProvider)
-          .save(access: session.access, refresh: session.refresh);
+      await ref.read(tokenStoreProvider).save(access: s.access, refresh: s.refresh);
       return true;
     });
   }
 
   Future<void> logout() async {
     await ref.read(tokenStoreProvider).clear();
-    state = const AsyncData(false);
+    expire();
   }
+
+  /// Sesi berakhir -> guard route mengarahkan ke /login.
+  void expire() => state = const AsyncData(false);
 }

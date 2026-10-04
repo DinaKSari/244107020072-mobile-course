@@ -1,6 +1,8 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../routes.dart';
+import 'dart:io' show Platform;
+import 'package:dio/dio.dart';
 
 final _local = FlutterLocalNotificationsPlugin();
 String? pendingDeepLink;
@@ -39,10 +41,31 @@ Future<void> initLocalNotifications() async {
   );
 }
 
-Future<void> initFcmToken({required Future<void> Function(String token) onToken}) async {
+String? _fcmToken;
+String? get fcmTokenShort =>
+    _fcmToken == null ? null : '${_fcmToken!.substring(0, 12)}...';
+
+/// Kirim token ke backend (butuh login). Kontrak: POST /devices {fcm_token, platform}
+Future<void> registerDevice(Dio dio) async {
+  final t = _fcmToken;
+  if (t == null) return;
+  try {
+    await dio.post('/devices', data: {
+      'fcm_token': t,
+      'platform': Platform.isIOS ? 'ios' : 'android',
+    });
+  } catch (_) {} // tidak log token; dicoba lagi saat login/refresh berikutnya
+}
+
+Future<void> initFcmToken({required Future<void> Function() onToken}) async {
+  Future<void> handle(String t) async {
+    _fcmToken = t;
+    await onToken();
+  }
+
   final token = await FirebaseMessaging.instance.getToken();
-  if (token != null) await onToken(token);
-  FirebaseMessaging.instance.onTokenRefresh.listen(onToken);
+  if (token != null) await handle(token);
+  FirebaseMessaging.instance.onTokenRefresh.listen(handle);
   await FirebaseMessaging.instance.subscribeToTopic('pengumuman-kampus');
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../messaging/push_service.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -12,6 +13,6 @@ class HomePage extends ConsumerWidget {
             onPressed: () => ref.read(authStateProvider.notifier).logout(),
           ),
         ]),
-        body: const Center(child: Text('Beranda')),
+        body: Center(child: Text('Token: ${fcmTokenShort ?? "belum ada"}')),
       );
 }
