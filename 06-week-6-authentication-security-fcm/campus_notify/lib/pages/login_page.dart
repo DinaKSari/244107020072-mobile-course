@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../data/api_errors.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +24,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
           TextField(controller: _pass, obscureText: true, decoration: const InputDecoration(labelText: 'Kata sandi')),
           const SizedBox(height: 16),
-          if (auth.hasError) Text('${auth.error}', style: const TextStyle(color: Colors.red)),
+          if (auth.hasError) Text(friendlyError(auth.error!), style: const TextStyle(color: Colors.red)),
           ElevatedButton(
             onPressed: auth.isLoading
                 ? null

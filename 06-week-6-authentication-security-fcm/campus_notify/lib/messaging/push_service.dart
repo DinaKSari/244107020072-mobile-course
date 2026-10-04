@@ -1,15 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../routes.dart';
 
 final _local = FlutterLocalNotificationsPlugin();
 String? pendingDeepLink;
 void Function(String route)? _go;
-
-/// Fungsi murni, mudah di-unit-test tanpa Firebase.
-String routeFromMessage(Map<String, dynamic> data) {
-  final route = (data['route'] ?? '/').toString();
-  return route.startsWith('/') ? route : '/$route';
-}
 
 // Wajib top-level, berjalan di isolate terpisah (jangan akses BuildContext/Riverpod).
 @pragma('vm:entry-point')
