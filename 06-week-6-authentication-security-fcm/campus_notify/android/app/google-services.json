@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722807072895",
+    "project_id": "week6mobile",
+    "storage_bucket": "week6mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722807072895:android:81d4ec1dea5ea7b57bf74a",
+        "android_client_info": {
+          "package_name": "com.example.campus_notify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-c9d9oCCaPSbFLy977zEj0fZkDwK-6nU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
