@@ -1,87 +1,116 @@
+import 'dart:io' show Platform;
+import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final _local = FlutterLocalNotificationsPlugin();
-String? pendingDeepLink;
-void Function(String route)? _go;
+const kTopic = 'pengumuman-kampus';
 
-/// Fungsi murni, mudah di-unit-test tanpa Firebase.
-String routeFromMessage(Map<String, dynamic> data) {
-  final route = (data['route'] ?? '/').toString();
-  return route.startsWith('/') ? route : '/$route';
+/// Ganti dengan Dio milikmu (yang punya interceptor Authorization).
+final dioProvider = Provider<Dio>((_) => Dio(BaseOptions(baseUrl: 'https://api.example.com')));
+final pushServiceProvider = Provider((ref) => PushService(ref.watch(dioProvider)));
+
+/// Fungsi murni: data FCM -> rute GoRouter.
+String routeFromData(Map<String, dynamic> data) {
+  final r = (data['route'] ?? '/').toString();
+  return r.startsWith('/') ? r : '/$r';
 }
 
-// Wajib top-level, berjalan di isolate terpisah (jangan akses BuildContext/Riverpod).
+// ⛔ TANPA BuildContext/Riverpod: top-level, isolate terpisah.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
-void registerBackgroundHandler() {
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-}
+class PushService {
+  PushService(this._dio);
+  final Dio _dio;
+  final _fcm = FirebaseMessaging.instance;
+  final _local = FlutterLocalNotificationsPlugin();
+  bool _started = false;
 
-Future<bool> requestNotificationPermission() async {
-  final settings = await FirebaseMessaging.instance.requestPermission(
-    alert: true, badge: true, sound: true,
-  );
-  return settings.authorizationStatus == AuthorizationStatus.authorized ||
-      settings.authorizationStatus == AuthorizationStatus.provisional;
-}
+  /// [go] = callback navigasi (mis. router.go), sehingga kelas ini bebas BuildContext.
+  Future<void> init(void Function(String route) go) async {
+    if (_started) return;
+    _started = true;
 
-Future<void> initLocalNotifications() async {
-  const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const ios = DarwinInitializationSettings();
-  await _local.initialize(
-    settings: const InitializationSettings(android: android, iOS: ios),
-    onDidReceiveNotificationResponse: (r) {
-      final p = r.payload;
-      if (p == null || p.isEmpty) return;
-      if (_go != null) {
-        _go!(p); // klik banner foreground
-      } else {
-        pendingDeepLink = p;
-      }
-    },
-  );
-}
+    await _requestPermission();
+    await _initLocal(go);
 
-Future<void> initFcmToken({required Future<void> Function(String token) onToken}) async {
-  final token = await FirebaseMessaging.instance.getToken();
-  if (token != null) await onToken(token);
-  FirebaseMessaging.instance.onTokenRefresh.listen(onToken);
-  await FirebaseMessaging.instance.subscribeToTopic('pengumuman-kampus');
-}
+    _fcm.onTokenRefresh.listen(_sendToken);
+    await syncToken();
+    await subscribe();
 
-Future<void> unsubscribeAnnouncements() =>
-    FirebaseMessaging.instance.unsubscribeFromTopic('pengumuman-kampus');
-
-/// Pasang ketiga handler: foreground, background (klik), terminated.
-Future<void> setupMessageHandlers(void Function(String route) go) async {
-  _go = go;
-
-  // Foreground: sistem tidak menampilkan banner, tampilkan manual.
-  FirebaseMessaging.onMessage.listen((message) async {
-    const details = AndroidNotificationDetails(
-      'pengumuman', 'Pengumuman Kampus',
-      importance: Importance.high, priority: Priority.high,
-    );
-    await _local.show(
-      id: message.hashCode,
-      title: message.notification?.title ?? 'Pengumuman',
-      body: message.notification?.body ?? '',
-      notificationDetails: const NotificationDetails(android: details),
-      payload: routeFromMessage(message.data),
-    );
-  });
-
-  // Background -> banner diklik.
-  FirebaseMessaging.onMessageOpenedApp
-      .listen((m) => go(routeFromMessage(m.data)));
-
-  // Terminated -> app dibuka dari notifikasi.
-  final initial = await FirebaseMessaging.instance.getInitialMessage();
-  if (initial != null) go(routeFromMessage(initial.data));
-  if (pendingDeepLink != null) {
-    go(pendingDeepLink!);
-    pendingDeepLink = null;
+    // Foreground
+    FirebaseMessaging.onMessage.listen(_showForeground);
+    // Background -> klik
+    FirebaseMessaging.onMessageOpenedApp.listen((m) => go(routeFromData(m.data)));
+    // Terminated -> klik
+    final initial = await _fcm.getInitialMessage();
+    if (initial != null) go(routeFromData(initial.data));
   }
+
+  Future<void> _requestPermission() async {
+    // 🤖 Android 13+: memunculkan dialog POST_NOTIFICATIONS (butuh izin di AndroidManifest).
+    //    Android <13: otomatis authorized.
+    // 🍎 iOS: dialog izin + butuh APNs key & capability Push.
+    await _fcm.requestPermission();
+
+    // 🍎 iOS saja: sistem sudah menampilkan banner saat foreground.
+    if (Platform.isIOS) {
+      await _fcm.setForegroundNotificationPresentationOptions(
+          alert: true, badge: true, sound: true);
+    }
+  }
+
+  Future<void> _initLocal(void Function(String) go) => _local.initialize(
+        settings: const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          // 🍎 izin sudah diminta lewat FCM, jangan minta dua kali.
+          iOS: DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          ),
+        ),
+        onDidReceiveNotificationResponse: (r) {
+          final p = r.payload;
+          if (p != null && p.isNotEmpty) go(p); // klik banner lokal (foreground)
+        },
+      );
+
+  /// Panggil juga setelah login agar POST /devices membawa Authorization.
+  Future<void> syncToken() async {
+    // 🍎 iOS: token FCM baru valid setelah APNs token tersedia.
+    if (Platform.isIOS && await _fcm.getAPNSToken() == null) return;
+    final token = await _fcm.getToken();
+    if (token != null) await _sendToken(token);
+  }
+
+  Future<void> _sendToken(String token) async {
+    try {
+      await _dio.post('/devices', data: {
+        'fcm_token': token,
+        'platform': Platform.isIOS ? 'ios' : 'android',
+      });
+    } catch (_) {/* jangan log token; coba lagi saat syncToken() berikutnya */}
+  }
+
+  Future<void> _showForeground(RemoteMessage m) async {
+    if (Platform.isIOS) return; // 🍎 sudah ditampilkan sistem
+    // 🤖 Android: foreground tidak menampilkan banner, tampilkan manual.
+    await _local.show(
+      id: m.hashCode,
+      title: m.notification?.title ?? 'Pengumuman',
+      body: m.notification?.body ?? '',
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'pengumuman', 'Pengumuman Kampus',
+          importance: Importance.high, priority: Priority.high,
+        ),
+      ),
+      payload: routeFromData(m.data),
+    );
+  }
+
+  Future<void> subscribe() => _fcm.subscribeToTopic(kTopic);
+  Future<void> unsubscribe() => _fcm.unsubscribeFromTopic(kTopic);
 }
