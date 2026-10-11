@@ -7,16 +7,15 @@ import '../../domain/repositories/post_repository.dart';
 import '../models/post_model.dart';
 
 class PostRepositoryImpl implements PostRepository {
-  PostRepositoryImpl({required Dio dio, required Future<Database> Function() openDb})
-      : _dio = dio,
-        _openDb = openDb;
-  final Dio _dio;
-  final Future<Database> Function() _openDb;
+  const PostRepositoryImpl({required this.dio, required this.openDb});
+
+  final Dio dio;
+  final Future<Database> Function() openDb;
 
   @override
   Future<Result<List<Post>>> readCache() async {
     try {
-      final db = await _openDb();
+      final db = await openDb();
       final rows = await db.query('cached_posts', orderBy: 'id ASC');
       final posts = rows
           .map((r) => PostModel.fromJson(
@@ -31,12 +30,12 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<Result<List<Post>>> refresh() async {
     try {
-      final res = await _dio.get<List>('/posts');
+      final res = await dio.get<List>('/posts');
       final posts = (res.data ?? [])
           .whereType<Map<String, dynamic>>()
           .map(PostModel.fromJson)
           .toList();
-      final db = await _openDb();
+      final db = await openDb();
       await db.transaction((txn) async {
         await txn.delete('cached_posts');
         final now = DateTime.now().toIso8601String();

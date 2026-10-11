@@ -5,15 +5,14 @@ import '../../domain/repositories/note_repository.dart';
 import '../models/note_model.dart';
 
 class NoteRepositoryImpl implements NoteRepository {
-  NoteRepositoryImpl({required Future<Database> Function() openDb})
-      : _openDb = openDb;
-  final Future<Database> Function() _openDb;
+  const NoteRepositoryImpl({required this.openDb});
 
-  // Satu tempat try/catch: exception mentah -> Failure ramah pengguna.
+  final Future<Database> Function() openDb;
+
   Future<Result<T>> _run<T>(
       String errorMessage, Future<T> Function(Database db) op) async {
     try {
-      return (data: await op(await _openDb()), failure: null);
+      return (data: await op(await openDb()), failure: null);
     } catch (_) {
       return (data: null, failure: LocalFailure(errorMessage));
     }
