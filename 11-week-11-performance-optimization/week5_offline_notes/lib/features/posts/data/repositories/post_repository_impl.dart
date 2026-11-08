@@ -1,0 +1,100 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../../../../core/failures.dart';
+import '../../domain/entities/post.dart';
+import '../../domain/repositories/post_repository.dart';
+import '../models/post_model.dart';
+
+class PostRepositoryImpl implements PostRepository {
+  const PostRepositoryImpl({required this.dio, required this.openDb});
+
+  final Dio dio;
+  final Future<Database> Function() openDb;
+
+  @override
+  Future<bool> isCacheStale({required Duration maxAge}) async {
+    try {
+      final db = await openDb();
+      final rows = await db.rawQuery(
+        'SELECT MAX(cached_at) AS cached_at FROM cached_posts',
+      );
+      final value = rows.first['cached_at'] as String?;
+      final cachedAt = value == null ? null : DateTime.tryParse(value);
+      return cachedAt == null || DateTime.now().difference(cachedAt) >= maxAge;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  @override
+  Future<Result<List<Post>>> readCache() async {
+    try {
+      final db = await openDb();
+      final rows = await db.query('cached_posts', orderBy: 'id ASC');
+      final posts = rows
+          .map(
+            (r) => PostModel.fromJson(
+              jsonDecode(r['payload'] as String) as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+      return (data: posts, failure: null);
+    } catch (_) {
+      return (data: null, failure: const LocalFailure('Gagal membaca cache.'));
+    }
+  }
+
+  @override
+  Future<Result<List<Post>>> refresh() async {
+    try {
+      final res = await dio.get<List>('/posts');
+      final posts = (res.data ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map(PostModel.fromJson)
+          .toList();
+      final db = await openDb();
+      await db.transaction((txn) async {
+        await txn.delete('cached_posts');
+        final now = DateTime.now().toIso8601String();
+        for (final p in posts) {
+          await txn.insert('cached_posts', {
+            'id': p.id,
+            'payload': jsonEncode(p.toJson()),
+            'cached_at': now,
+          });
+        }
+      });
+      return (data: posts, failure: null);
+    } on DioException catch (e) {
+      return (data: null, failure: NetworkFailure(friendlyErrorMessage(e)));
+    } catch (_) {
+      return (
+        data: null,
+        failure: const LocalFailure('Gagal menyimpan cache.'),
+      );
+    }
+  }
+}
+
+String friendlyErrorMessage(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return 'Koneksi lambat atau timeout. Periksa internet Anda lalu coba lagi.';
+    case DioExceptionType.connectionError:
+      return 'Tidak dapat terhubung ke server. Periksa internet Anda.';
+    case DioExceptionType.badResponse:
+      final code = e.response?.statusCode;
+      if (code == 404) return 'Data tidak ditemukan (404).';
+      if (code == 401 || code == 403) {
+        return 'Akses ditolak ($code). Periksa kredensial Anda.';
+      }
+      return 'Server bermasalah ($code). Coba lagi nanti.';
+    default:
+      return 'Terjadi kesalahan jaringan. Coba lagi.';
+  }
+}
